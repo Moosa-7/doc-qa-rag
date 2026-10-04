@@ -1,0 +1,1 @@
+- **Garbled Data Structure:** The text extraction from the PDFs was clean, but the JSON boundaries generated as `ä` and `å` characters instead of standard curly braces `{` and `}`. This makes the file invalid for standard JSON parsers.
