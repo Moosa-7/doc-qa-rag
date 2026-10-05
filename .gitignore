@@ -3,3 +3,8 @@ __pycache__/
 data/index/
 .DS_Store
 .env
+
+# Ignore generated RAG data and evaluation results
+data/index*/
+data/chunks_*.jsonl
+eval/results/

@@ -1,6 +1,14 @@
 import json
+import os
 from pypdf import PdfReader
 from src.config import PDF_DIR, CHUNKS_PATH, CHUNK_SIZE, CHUNK_OVERLAP
+
+FILTER_REFS = os.getenv("FILTER_REFS", "0") == "1"
+
+
+def looks_like_references(text):
+    """Crude heuristic: bibliography chunks are dense with links."""
+    return text.count("http") >= 3 or text.count("doi.org") >= 2
 
 
 def extract_pages(pdf_path):
@@ -9,7 +17,7 @@ def extract_pages(pdf_path):
     for page_number, page in enumerate(reader.pages, start=1):
         text = page.extract_text() or ""
         text = " ".join(text.split())  # collapse newlines/extra spaces
-        if len(text) > 50:             # skip blank or near-empty pages
+        if len(text) > 50:              # skip blank or near-empty pages
             yield page_number, text
 
 
@@ -29,10 +37,14 @@ def chunk_text(text, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
 def main():
     CHUNKS_PATH.parent.mkdir(parents=True, exist_ok=True)
     chunk_id = 0
+    dropped = 0
     with CHUNKS_PATH.open("w") as out:
         for pdf_path in sorted(PDF_DIR.glob("*.pdf")):
             for page_number, text in extract_pages(pdf_path):
                 for piece in chunk_text(text):
+                    if FILTER_REFS and looks_like_references(piece):
+                        dropped += 1
+                        continue
                     record = {
                         "id": chunk_id,
                         "source": pdf_path.name,
@@ -43,6 +55,7 @@ def main():
                     chunk_id += 1
             print(f"Processed {pdf_path.name}")
     print(f"Total chunks: {chunk_id}")
+    print(f"Dropped chunks: {dropped}")
 
 
 if __name__ == "__main__":

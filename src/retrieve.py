@@ -1,7 +1,7 @@
 import sys
 import faiss
 from sentence_transformers import SentenceTransformer
-from src.config import EMBED_MODEL, INDEX_PATH, load_chunks
+from src.config import EMBED_MODEL, INDEX_PATH, load_chunks, QUERY_PREFIX
 
 
 class Retriever:
@@ -11,7 +11,7 @@ class Retriever:
         self.chunks = load_chunks()
 
     def search(self, query, k=4):
-        vec = self.model.encode([query], normalize_embeddings=True).astype("float32")
+        vec = self.model.encode([QUERY_PREFIX + query], normalize_embeddings=True).astype("float32")
         scores, ids = self.index.search(vec, k)
         results = []
         for score, idx in zip(scores[0], ids[0]):
