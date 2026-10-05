@@ -1,3 +1,13 @@
+try:
+    import spaces   # must be imported before torch or gradio on ZeroGPU Spaces
+
+    @spaces.GPU
+    def _zerogpu_placeholder():
+        """Never called. ZeroGPU Spaces require at least one @spaces.GPU function."""
+        return None
+except ImportError:
+    pass   # running locally, where the spaces package isn't installed
+
 import gradio as gr
 
 from src.generate import answer
